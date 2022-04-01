@@ -2,11 +2,11 @@
 SHELL := /bin/bash
 SRC = $(wildcard nbs/*.ipynb)
 
-all: nbprocess docs
+all: nbdev2 docs
 
-nbprocess: $(SRC)
+nbdev2: $(SRC)
 	nbprocess_export
-	touch nbprocess
+	touch nbdev2
 
 sync:
 	nbdev_update_lib
@@ -25,7 +25,7 @@ docs: docusaurus
 
 .PHONY: docusaurus
 docusaurus:
-	nbprocess_docs --path nbs --dest docusaurus/docs
+	nbdev2_docs --path nbs --dest docusaurus/docs
 
 test:
 	nbdev_test_nbs
