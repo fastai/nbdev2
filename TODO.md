@@ -6,18 +6,13 @@
     - docments
     - numpy
 - Optionally execute `show_doc` cells
-- Remove `#export` and `#hide` cells
-- Remove all cell comments
 - auto-add `show_doc`
   - support `#default_cls_lvl`
 - implement `#collapse_input`, `#collapse_output`, `#hide_output`, `#hide_input`
+  - this is already in the mkdocs template
 - Back-tick linking
 - implement stuff from nbdev export2html, e.g.(?):
   - `remove_widget_state`
   - `make_readme`
 - tmp.ipynb tests are flaky
-
-## Other
-
-- Some way to extend preprocessors, e.g. Metaflow-specific stuff
 
