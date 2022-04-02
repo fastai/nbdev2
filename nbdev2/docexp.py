@@ -230,28 +230,38 @@ _re_digits = re.compile(r'^\d+[_|-]')
 def _rm_digits(nm): return _re_digits.sub('', nm)
 
 # Cell
+def _get_md(exp, file): return exp.from_filename(file, resources=dict(unique_key=file.stem, output_files_dir=file.stem))
+
+def _get_fw(dest):
+    # https://gitlab.kwant-project.org/solidstate/lectures/-/blob/master/execute.py
+    fw = FilesWriter()
+    if dest: fw.build_directory = dest
+    return fw
+
 class DocExporter:
     "A notebook exporter which composes preprocessors"
     cfg=default_pp_cfg()
     tpl_path=(Path(__file__).parent/'tpl').resolve()
     tpl_file='nb.md.j2'
     pps=default_pps()
-    fn_pp=_rm_digits
 
-    def __call__(self, file): return _doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
+    @classmethod
+    def fname_pp(cls, nm): return _rm_digits(nm)
+
+    @property
+    def exporter(self): return _doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
+
+    def __call__(self, file, dest):
+        md = _get_md(self.exporter, file)
+        fw = _get_fw(dest)
+        fw.write(*md, notebook_name=self.fname_pp(file.stem))
 
 # Cell
-def nb2md(fname, dest=None, rm_digits=False, exp_cls=DocExporter):
+def nb2md(fname, dest=None, exp_cls=DocExporter):
     "Convert notebook to markdown and export attached/output files"
     if isinstance(dest,Path): dest=dest.name
     file = Path(fname)
     assert file.name.endswith('.ipynb'), f'{fname} is not a notebook.'
     assert file.is_file(), f'file {fname} not found.'
-    exp = exp_cls()(file)
-
-    # https://gitlab.kwant-project.org/solidstate/lectures/-/blob/master/execute.py
-    fw = FilesWriter()
-    md = exp.from_filename(fname, resources=dict(unique_key=file.stem, output_files_dir=file.stem))
-    if dest: fw.build_directory = dest
-    nm = exp_cls.fn_pp(file.stem)
-    return fw.write(*md, notebook_name=nm)
+    # import ipdb; ipdb.set_trace()
+    exp_cls()(file, dest)
