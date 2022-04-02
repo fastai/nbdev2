@@ -226,18 +226,19 @@ def default_pps():
             ExtractAttachmentsPreprocessor, ExtractOutputPreprocessor]
 
 # Cell
+_re_digits = re.compile(r'^\d+[_|-]')
+def _rm_digits(nm): return _re_digits.sub('', nm)
+
+# Cell
 class DocExporter:
     "A notebook exporter which composes preprocessors"
     cfg=default_pp_cfg()
     tpl_path=(Path(__file__).parent/'tpl').resolve()
     tpl_file='nb.md.j2'
     pps=default_pps()
+    fn_pp=_rm_digits
 
     def __call__(self, file): return _doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
-
-# Cell
-_re_digits = re.compile(r'^\d+[_|-]')
-def _rm_digits(nm): return _re_digits.sub('', nm)
 
 # Cell
 def nb2md(fname, dest=None, rm_digits=False, exp_cls=DocExporter):
@@ -252,5 +253,5 @@ def nb2md(fname, dest=None, rm_digits=False, exp_cls=DocExporter):
     fw = FilesWriter()
     md = exp.from_filename(fname, resources=dict(unique_key=file.stem, output_files_dir=file.stem))
     if dest: fw.build_directory = dest
-    nm = file.stem if not rm_digits else _rm_digits(file.stem)
+    nm = exp_cls.fn_pp(file.stem)
     return fw.write(*md, notebook_name=nm)
