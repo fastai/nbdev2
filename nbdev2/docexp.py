@@ -3,7 +3,8 @@
 # %% auto 0
 __all__ = ['default_tpl', 'default_pp_cfg', 'preprocess_cell', 'preprocess', 'preprocess_rm_cell', 'InjectMeta', 'ShowMeta',
            'StripAnsi', 'InsertWarning', 'RmEmptyCode', 'UpdateTags', 'HideInputLines', 'FilterOutput', 'CleanFlags',
-           'CleanMagics', 'BashIdentify', 'CleanShowDoc', 'RmHeaderDash', 'default_pps', 'DocExporter', 'nb2md']
+           'CleanMagics', 'BashIdentify', 'CleanShowDoc', 'RmHeaderDash', 'RmExport', 'default_pps', 'DocExporter',
+           'nb2md']
 
 # %% ../nbs/01_docexp.ipynb 3
 import re,uuid,os
@@ -210,14 +211,22 @@ def RmHeaderDash(cell):
     src = cell.source.strip()
     return cell.cell_type == 'markdown' and src.startswith('#') and src.endswith(' -')
 
-# %% ../nbs/01_docexp.ipynb 63
+# %% ../nbs/01_docexp.ipynb 62
+_re_export = re.compile('# *(?:export|hide)')
+
+@preprocess_rm_cell
+def RmExport(cell):
+    "Remove cells that are exported or hidden"
+    return cell.cell_type == 'code' and _re_export.match(cell.source.strip())
+
+# %% ../nbs/01_docexp.ipynb 66
 def default_pps():
     "Default Preprocessors for MDX export"
     return [InjectMeta, CleanMagics, BashIdentify, UpdateTags, InsertWarning, TagRemovePreprocessor,
-            CleanFlags, CleanShowDoc, RmEmptyCode, StripAnsi, HideInputLines, RmHeaderDash,
+            CleanFlags, CleanShowDoc, RmEmptyCode, StripAnsi, HideInputLines, RmHeaderDash, RmExport,
             ExtractAttachmentsPreprocessor, ExtractOutputPreprocessor]
 
-# %% ../nbs/01_docexp.ipynb 64
+# %% ../nbs/01_docexp.ipynb 67
 class DocExporter:
     "A notebook exporter which composes preprocessors"
     cfg=default_pp_cfg()
@@ -227,7 +236,7 @@ class DocExporter:
 
     def __call__(self, file): return _doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
 
-# %% ../nbs/01_docexp.ipynb 65
+# %% ../nbs/01_docexp.ipynb 68
 def nb2md(fname, dest=None, exp_cls=DocExporter):
     "Convert notebook to markdown and export attached/output files"
     if isinstance(dest,Path): dest=dest.name
