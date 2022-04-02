@@ -1,6 +1,5 @@
 ## Docs export
 
-- Remove leading `(\d+)_` from markdown file names
 - Implement [`show_doc`](https://github.com/fastai/nbdev/blob/master/nbs/02_showdoc.ipynb) in markdown/HTML
   - Pluggable parsers for parameter docs
     - docments
