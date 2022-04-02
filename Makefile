@@ -13,7 +13,7 @@ sync:
 
 .PHONY: docexp
 docexp:
-	nbdev2_docs --path nbs --dest mddocs
+	nbdev2_docs --path nbs --dest docs
 
 test:
 	nbdev_test_nbs

@@ -6,6 +6,8 @@ from .docexp import *
 import os,sys
 
 from nbconvert.exporters import Exporter
+from nbprocess.read import get_config
+from importlib import import_module
 from fastcore.all import Path,parallel,call_parse,bool_arg,globtastic
 
 # %% auto 0
@@ -18,13 +20,19 @@ def _needs_update(fname:Path, dest:str=None):
     if dest: fname_out = Path(dest)/f'{fname_out.name}'
     return not fname_out.exists() or os.path.getmtime(fname) >= os.path.getmtime(fname_out)
 
+def _nb2md(file, dest=None, exp_cls=None):
+    print(f"converting: {file}")
+    try: return nb2md(file, dest=dest, exp_cls=exp_cls)
+    except Exception as e: print(f"{file} failed\n{e}")
 
+# %% ../nbs/02_convert.ipynb 5
 @call_parse
 def export_docs(
     path:str='.', # path or filename
     dest:str='build', # path or filename
     recursive:bool=True, # search subfolders
     symlinks:bool=True, # follow symlinks?
+    exporter:str=None, # DocExporter subclass for SSG
     n_workers:int=None, # Number of parallel workers
     pause:int=0, # Pause between parallel launches
     force_all:bool=False, # Force rebuild docs that are up-to-date
@@ -35,20 +43,19 @@ def export_docs(
     skip_file_re:str=None, # Skip files matching regex
     skip_folder_re:str='^[_.]' # Skip folders matching regex
 ):
+    if exporter is None: exporter = get_config().get('exporter', None)
+    if exporter is None: exp_cls=DocExporter
+    else:
+        p,m = exporter.rsplit('.', 1)
+        exp_cls = getattr(import_module(p), m)
     if not recursive: skip_folder_re='.'
     files = globtastic(path, symlinks=symlinks, file_glob=file_glob, file_re=file_re,
                        folder_re=folder_re, skip_file_glob=skip_file_glob,
                        skip_file_re=skip_file_re, skip_folder_re=skip_folder_re
                       ).map(Path)
     
-    if len(files)==1: force_all,n_workers = True,0
-    if not force_all:
-        files = [f for f in files if _needs_update(f, dest)]
+    if str(path).endswith('.ipynb'): force_all,n_workers = True,0
+    if not force_all: files = [f for f in files if _needs_update(f, dest)]
+    if sys.platform == "win32": n_workers=0
     if len(files)==0: print("No notebooks were modified.")
-    else:
-        if sys.platform == "win32": n_workers = 0
-        passed = parallel(nb2md, files, n_workers=n_workers, pause=pause, dest=dest)
-        if not all(passed):
-            msg = "Conversion failed on the following:\n"
-            print(msg + '\n'.join([f.name for p,f in zip(passed,files) if not p]))
-        
+    else: parallel(_nb2md, files, exp_cls=exp_cls, n_workers=n_workers, pause=pause, dest=dest)

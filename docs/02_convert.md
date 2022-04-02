@@ -52,8 +52,7 @@ def export_docs(
                       ).map(Path)
     
     if len(files)==1: force_all,n_workers = True,0
-    if not force_all:
-        files = [f for f in files if _needs_update(f, dest)]
+    if not force_all: files = [f for f in files if _needs_update(f, dest)]
     if len(files)==0: print("No notebooks were modified.")
     else:
         if sys.platform == "win32": n_workers = 0
@@ -75,12 +74,8 @@ for f in _test_nbs:
     assert _dest.exists(), f'{_dest} does not exist.'
 ```
 
-<CodeOutputBlock lang="python">
-
     converting: ../tests/docs_test.ipynb
 
-
-</CodeOutputBlock>
 
 The modified times of notebooks are introspected such notebooks that haven't changed after markdown files have been created will not be converted:
 
@@ -89,12 +84,8 @@ The modified times of notebooks are introspected such notebooks that haven't cha
 export_docs('../tests', recursive=False, n_workers=0, dest='../tests')
 ```
 
-<CodeOutputBlock lang="python">
-
     converting: ../tests/docs_test.ipynb
 
-
-</CodeOutputBlock>
 
 However, you can set `force_all` = `True` to force notebooks to convert:
 
@@ -103,12 +94,8 @@ However, you can set `force_all` = `True` to force notebooks to convert:
 export_docs('../tests', recursive=False, n_workers=0, force_all=True, dest='../tests')
 ```
 
-<CodeOutputBlock lang="python">
-
     converting: ../tests/docs_test.ipynb
 
-
-</CodeOutputBlock>
 
 
 ```python

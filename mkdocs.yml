@@ -1,0 +1,10 @@
+site_name: nbdev2
+theme:
+    name: material
+extra_css:
+  - extra.css
+  - //cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/default.min.css
+extra_javascript:
+  - //cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/highlight.min.js
+  - init.js
+
