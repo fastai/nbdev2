@@ -212,7 +212,7 @@ def RmHeaderDash(cell):
     return cell.cell_type == 'markdown' and src.startswith('#') and src.endswith(' -')
 
 # %% ../nbs/01_docexp.ipynb 62
-_re_export = re.compile('# *(?:export|hide)')
+_re_export = re.compile('# *(?:export|hide|default_exp)')
 
 @preprocess_rm_cell
 def RmExport(cell):
