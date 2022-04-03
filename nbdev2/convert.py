@@ -5,27 +5,42 @@ from __future__ import annotations
 from .docexp import *
 import os,sys
 
+from fastcore.imports import *
 from nbconvert.exporters import Exporter
 from nbprocess.read import get_config
 from importlib import import_module
 from fastcore.all import Path,parallel,call_parse,bool_arg,globtastic
 
 # %% auto 0
-__all__ = ['export_docs']
+__all__ = ['DocExporter', 'export_docs']
 
-# %% ../nbs/02_convert.ipynb 4
+# %% ../nbs/02_convert.ipynb 5
+class DocExporter:
+    "A notebook exporter which composes preprocessors"
+    def __init__(self, files, dest): pass
+    
+    cfg=default_pp_cfg()
+    tpl_path=(Path(__file__).parent/'tpl').resolve()
+    tpl_file='nb.md.j2'
+    pps=default_pps()
+
+    @property
+    def exporter(self): return doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
+    def __call__(self, file, dest): return nb2md(file, self.exporter, dest=dest)
+
+# %% ../nbs/02_convert.ipynb 6
 def _needs_update(fname:Path, dest:str=None):
     "Determines if a markdown file should be updated based on modification time relative to its notebook."
     fname_out = fname.with_suffix('.md')
     if dest: fname_out = Path(dest)/f'{fname_out.name}'
     return not fname_out.exists() or os.path.getmtime(fname) >= os.path.getmtime(fname_out)
 
-def _nb2md(file, dest=None, exp_cls=None):
+def _nb2md(file, docexp=None, dest=None):
     print(f"converting: {file}")
-    try: return nb2md(file, dest=dest, exp_cls=exp_cls)
+    try: return docexp(file, dest=dest)
     except Exception as e: print(f"{file} failed\n{e}")
 
-# %% ../nbs/02_convert.ipynb 5
+# %% ../nbs/02_convert.ipynb 7
 @call_parse
 def export_docs(
     path:str='.', # path or filename
@@ -57,5 +72,6 @@ def export_docs(
     if str(path).endswith('.ipynb'): force_all,n_workers = True,0
     if not force_all: files = [f for f in files if _needs_update(f, dest)]
     if sys.platform == "win32": n_workers=0
+    docexp = exp_cls(files, dest)
     if len(files)==0: print("No notebooks were modified.")
-    else: parallel(_nb2md, files, exp_cls=exp_cls, n_workers=n_workers, pause=pause, dest=dest)
+    else: parallel(_nb2md, files, docexp=docexp, n_workers=n_workers, pause=pause, dest=dest)
