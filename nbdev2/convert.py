@@ -27,11 +27,11 @@ class DocExporter:
     tpl_file='nb.md.j2'
     pps=default_pps()
 
-    def __init__(self, files, dest): self.files,self.dest = files,dest
+    def __init__(self, files, dest): self.files,self.dest = files,Path(dest)
 
     def post_process(self):
-        idx_f = (get_config().path("nbs_path") if not self.dest else Path(self.dest))/'index.md'
-        if idx_f.exists(): shutil.move(idx_f, idx_f.parent/'README.md')
+        idx_f = self.dest/'index.md'
+        if idx_f.exists(): shutil.copy(idx_f, idx_f.parent/'README.md')
 
     @property
     def exporter(self): return doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
@@ -53,7 +53,7 @@ def _nb2md(file, docexp=None, dest=None):
 @call_parse
 def export_docs(
     path:str='.', # path or filename
-    dest:str='build', # path or filename
+    dest:str=None, # path or filename
     recursive:bool=True, # search subfolders
     symlinks:bool=True, # follow symlinks?
     exporter:str=None, # DocExporter subclass for SSG
@@ -67,6 +67,7 @@ def export_docs(
     skip_file_re:str=None, # Skip files matching regex
     skip_folder_re:str='^[_.]' # Skip folders matching regex
 ):
+    dest = get_config().path("doc_path") if not dest else Path(dest)
     if exporter is None: exporter = get_config().get('exporter', None)
     if exporter is None: exp_cls=DocExporter
     else:
@@ -82,6 +83,7 @@ def export_docs(
     if not force_all: files = [f for f in files if _needs_update(f, dest)]
     if sys.platform == "win32": n_workers=0
     docexp = exp_cls(files, dest)
+    # import ipdb; ipdb.set_trace()
     if len(files)==0: print("No notebooks were modified.")
     else: parallel(_nb2md, files, docexp=docexp, n_workers=n_workers, pause=pause, dest=dest)
     docexp.post_process()
