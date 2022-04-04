@@ -83,7 +83,6 @@ def export_docs(
     if not force_all: files = [f for f in files if _needs_update(f, dest)]
     if sys.platform == "win32": n_workers=0
     docexp = exp_cls(files, dest)
-    # import ipdb; ipdb.set_trace()
     if len(files)==0: print("No notebooks were modified.")
     else: parallel(_nb2md, files, docexp=docexp, n_workers=n_workers, pause=pause, dest=dest)
     docexp.post_process()
