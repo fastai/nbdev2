@@ -27,11 +27,12 @@ class DocExporter:
     tpl_file='nb.md.j2'
     pps=default_pps()
 
-    def __init__(self, files, dest): self.files,self.dest = files,Path(dest)
+    def __init__(self, files, dest): self.files,self.dest = files,dest
 
     def post_process(self):
-        idx_f = self.dest/'index.md'
-        if idx_f.exists(): shutil.copy(idx_f, idx_f.parent/'README.md')
+        if self.dest:
+            idx_f = Path(self.dest)/'index.md'
+            if idx_f.exists(): shutil.copy(idx_f, idx_f.parent/'README.md')
 
     @property
     def exporter(self): return doc_exporter(self.pps, self.cfg, tpl_file=self.tpl_file, tpl_path=self.tpl_path)
@@ -53,7 +54,7 @@ def _nb2md(file, docexp=None, dest=None):
 @call_parse
 def export_docs(
     path:str='.', # path or filename
-    dest:str=None, # path or filename
+    dest:str=None, # path or filename, if None: looks for doc_path in settings.ini, else dest same as each notebook.
     recursive:bool=True, # search subfolders
     symlinks:bool=True, # follow symlinks?
     exporter:str=None, # DocExporter subclass for SSG
